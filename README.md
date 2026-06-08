@@ -1,0 +1,1 @@
+# lotometrika-rd-v2
