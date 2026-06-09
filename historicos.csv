@@ -1,3 +1,7 @@
-fecha,loteria,turno,primero,segundo,tercero
-2026-06-08,NACIONAL,NOCHE,53,39,92
-2026-06-07,LOTEKA,NOCHE,37,56,11
+import os
+
+st.title("Históricos")
+
+st.write("Archivos visibles:")
+
+st.write(os.listdir("."))
