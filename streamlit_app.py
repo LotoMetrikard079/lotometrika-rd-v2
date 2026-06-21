@@ -1,32 +1,26 @@
-
 import streamlit as st
 import pandas as pd
 from datetime import datetime
 from pathlib import Path
 
-# RUTA CORRECTA DENTRO DEL REPO
+# Ruta fija dentro del repositorio
 CARPETA = Path(".")
 ARCHIVO_DATOS = str(CARPETA / "data" / "raw_historical_baseline.csv")
 
 @st.cache_data(show_spinner="Cargando historial de sorteos…")
 def cargar_datos():
-    # Leer con separador de tabulaciones y limpiar nombres de columnas
     df = pd.read_csv(
         ARCHIVO_DATOS,
         sep="\t",
         dtype=str,
         on_bad_lines="skip"
     )
-    # LIMPIEZA OBLIGATORIA: quita espacios de nombres y valores
     df.columns = df.columns.str.strip().str.lower()
     df = df.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
 
-    # NOMBRES UNIFICADOS SEGÚN TU ESTRUCTURA ORIGINAL
     columnas_esperadas = ["fecha", "loteria", "turno", "primero", "segundo", "tercero", "cuarto", "quinto"]
-    # Dejar solo las que existan, sin romper
     df = df.reindex(columns=[c for c in columnas_esperadas if c in df.columns])
 
-    # Procesar fecha y números
     if "fecha" in df.columns:
         df["fecha"] = pd.to_datetime(df["fecha"], errors="coerce")
         df = df.dropna(subset=["fecha"])
@@ -39,7 +33,6 @@ def cargar_datos():
 
 df = cargar_datos()
 
-# --- LÓGICA 1220 / FRANJAS / RETRASOS ---
 def retraso_numero(num, df, fecha_ref=None):
     if fecha_ref is None:
         fecha_ref = datetime.today().strftime("%Y-%m-%d")
@@ -87,19 +80,21 @@ def mejores_candidatos(df, franja, min_retraso=3, max_retraso=18, cantidad=2):
             continue
         dias_retraso = (fecha_max - ultima_fecha_por_num.loc[n]).days
         if min_retraso <= dias_retraso <= max_retraso:
-            lista.append((‑frecuencia.get(n, 0), dias_retraso, n))
+            lista.append((-frecuencia.get(n, 0), dias_retraso, n))
     lista.sort()
     return [n for _, _, n in lista[:cantidad]]
 
-# 🖥️ INTERFAZ SEGURA
 st.set_page_config(page_title="LotoMetrika‑RD", layout="wide")
 st.title("📊 LotoMetrika‑RD • Sistema 1220 + Franjas Horarias")
 st.info(f"✅ Datos listos | Registros válidos: {len(df)} | Último sorteo: {df['fecha'].max().date()}")
 
 c1, c2, c3 = st.columns(3)
-with c1: franja_sel = st.selectbox("Franja horaria", list(RANGOS.keys()), index=0)
-with c2: min_d = st.number_input("Retraso mínimo (días)", min_value=1, max_value=60, value=3)
-with c3: max_d = st.number_input("Retraso máximo (días)", min_value=min_d, max_value=120, value=18)
+with c1:
+    franja_sel = st.selectbox("Franja horaria", list(RANGOS.keys()), index=0)
+with c2:
+    min_d = st.number_input("Retraso mínimo (días)", min_value=1, max_value=60, value=3)
+with c3:
+    max_d = st.number_input("Retraso máximo (días)", min_value=min_d, max_value=120, value=18)
 
 st.subheader(f"🎯 Candidatos para {franja_sel} — {RANGOS[franja_sel]['etiqueta']}")
 for num in mejores_candidatos(df, franja_sel, min_d, max_d):
@@ -108,4 +103,3 @@ for num in mejores_candidatos(df, franja_sel, min_d, max_d):
 
 with st.expander("🔎 Ver muestra del historial"):
     st.dataframe(df.sort_values("fecha", ascending=False).head(20).reset_index(drop=True))
-
