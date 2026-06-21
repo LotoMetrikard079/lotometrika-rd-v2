@@ -1,4 +1,4 @@
-## 📊 data/raw_historical_baseline.csv (Dataset Masivo de Profundidad Cíclica)
+raw_historical_baseline.csv (Dataset Masivo de Profundidad Cíclica)
 
 id_sorteo,fecha,franja_horaria,loteria_nombre,primero,segundo,tercero,resultado_residuo,rango_comportamiento
 1001,2023-09-20,MEDIODIA,LotoReal,45,12,88,48.33,BAJO
