@@ -19,10 +19,12 @@ try:
     with open(ARCHIVO, "rb") as f:
         contenido_bruto = f.read()
     contenido_limpio = contenido_bruto.replace(b"\x00", b"").decode("utf-8", errors="ignore")
-    df = pd.read_csv(StringIO(contenido_limpio), dtype=str, on_bad_lines="skip")
-except Exception as e:
-    print(f"❌ ERROR DE LECTURA: {e}")
-    exit()
+    df = pd.read_csv(
+    StringIO(contenido_limpio),
+    sep="\t",      # ← ESTE ES EL CAMBIO: usa TABULACIÓN, no coma
+    dtype=str,
+    on_bad_lines="skip"
+)
 
 # ✅ VALIDACIÓN DE ESTRUCTURA
 COLUMNAS_REQUERIDAS = ["fecha","loteria","turno","primero","segundo","tercero"]
