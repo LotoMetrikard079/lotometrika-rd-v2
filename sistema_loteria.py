@@ -3,11 +3,12 @@ import os
 from datetime import datetime
 from io import StringIO
 
-# 📍 RUTA ESTÁNDAR: AJUSTA AQUÍ SI USAS NOMBRE DIFERENTE
-ARCHIVO = "data/raw_historical_baseline.csv"
-# Si prefieres mantener nombre original:
-# ARCHIVO = "data/historico.csv"
+import sys
+from pathlib import Path
 
+# 📍 RUTA SEGURA, NO IMPORTA DESDE DÓNDE EJECUTES
+CARPETA_PROYECTO = Path(__file__).resolve().parent
+ARCHIVO = str(CARPETA_PROYECTO / "data" / "raw_historical_baseline.csv")
 print("🔍 Verificando ubicación...")
 if not os.path.exists(ARCHIVO):
     print(f"❌ NO ENCONTRADO: {ARCHIVO} → revisa carpeta/data/nombre")
