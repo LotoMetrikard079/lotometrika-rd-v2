@@ -1,105 +1,111 @@
+
 import streamlit as st
 import pandas as pd
 from datetime import datetime
 from pathlib import Path
 
-# 📍 RUTA FIJA DENTRO DEL REPOSITORIO
+# RUTA CORRECTA DENTRO DEL REPO
 CARPETA = Path(".")
 ARCHIVO_DATOS = str(CARPETA / "data" / "raw_historical_baseline.csv")
 
-# 📦 CARGA Y LIMPIEZA (IGUAL QUE TRABAJAMOS ANTES)
-@st.cache_data(show_spinner="Cargando y procesando historial…")
+@st.cache_data(show_spinner="Cargando historial de sorteos…")
 def cargar_datos():
+    # Leer con separador de tabulaciones y limpiar nombres de columnas
     df = pd.read_csv(
         ARCHIVO_DATOS,
         sep="\t",
         dtype=str,
         on_bad_lines="skip"
     )
-    df.columns = df.columns.str.strip()
-    df = df.apply(lambda x: x.str.strip())
+    # LIMPIEZA OBLIGATORIA: quita espacios de nombres y valores
+    df.columns = df.columns.str.strip().str.lower()
+    df = df.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
 
-    COLUMNAS = ["fecha","loteria","turno","primero","segundo","tercero"]
-    df = df.dropna(subset=COLUMNAS)
-    df["fecha"] = pd.to_datetime(df["fecha"], errors="coerce")
-    df = df.dropna(subset=["fecha"])
-    for col in ["primero","segundo","tercero"]:
-        df[col] = pd.to_numeric(df[col], errors="coerce")
-        df = df[(df[col]>=0)&(df[col]<=99)]
-    df = df.dropna(subset=["primero","segundo","tercero"])
+    # NOMBRES UNIFICADOS SEGÚN TU ESTRUCTURA ORIGINAL
+    columnas_esperadas = ["fecha", "loteria", "turno", "primero", "segundo", "tercero", "cuarto", "quinto"]
+    # Dejar solo las que existan, sin romper
+    df = df.reindex(columns=[c for c in columnas_esperadas if c in df.columns])
+
+    # Procesar fecha y números
+    if "fecha" in df.columns:
+        df["fecha"] = pd.to_datetime(df["fecha"], errors="coerce")
+        df = df.dropna(subset=["fecha"])
+    for col in ["primero", "segundo", "tercero", "cuarto", "quinto"]:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+            df = df.dropna(subset=[col])
+            df = df[(df[col] >= 0) & (df[col] <= 99)]
     return df
 
 df = cargar_datos()
 
-# --- 📊 LÓGICA 1220 / RETRASOS / FRANJAS — TAL CUAL LA DISEÑAMOS ---
+# --- LÓGICA 1220 / FRANJAS / RETRASOS ---
 def retraso_numero(num, df, fecha_ref=None):
     if fecha_ref is None:
         fecha_ref = datetime.today().strftime("%Y-%m-%d")
     fr = pd.to_datetime(fecha_ref)
-    apar = df[(df["primero"]==num)|(df["segundo"]==num)|(df["tercero"]==num)]["fecha"]
-    ant = apar[apar < fr]
-    if ant.empty:
-        return False, f"{num:02d}: sin salidas antes de {fecha_ref}"
-    ult = ant.max()
-    años = fr.year - ult.year
-    meses = fr.month - ult.month
-    días = fr.day - ult.day
+    cols_numeros = [c for c in ["primero", "segundo", "tercero", "cuarto", "quinto"] if c in df.columns]
+    apariciones = df[df[cols_numeros].eq(num).any(axis=1)]["fecha"]
+    anteriores = apariciones[apariciones < fr]
+    if anteriores.empty:
+        return False, f"{num:02d}: sin salidas registradas antes de {fecha_ref}"
+    ultima = anteriores.max()
+    años = fr.year - ultima.year
+    meses = fr.month - ultima.month
+    días = fr.day - ultima.day
     if días < 0:
-        meses -=1; días +=31
-    if meses <0:
-        años -=1; meses +=12
-    return True, f"{num:02d} → Últ:{ult.date()} | {años}a {meses}m {días}d"
+        meses -= 1
+        días += 31
+    if meses < 0:
+        años -= 1
+        meses += 12
+    return True, f"{num:02d} → Última: {ultima.date()} | Retraso: {años}a {meses}m {días}d"
 
 def generar_derivados(num):
-    num=int(num)
-    s12=(num+12)%100
-    s20=(num+20)%100
-    esp=int(f"{num:02d}"[::-1])
-    return [f"{num:02d}", f"{s12:02d}", f"{s20:02d}", f"{esp:02d}"]
+    num = int(num)
+    s12 = (num + 12) % 100
+    s20 = (num + 20) % 100
+    espejo = int(f"{num:02d}"[::-1])
+    return [f"{num:02d}", f"{s12:02d}", f"{s20:02d}", f"{espejo:02d}"]
 
-RANGOS_TURNOS = {
-    "MAÑANA": {"desde":0,"hasta":33,"etiqueta":"Bajos"},
-    "TARDE": {"desde":34,"hasta":66,"etiqueta":"Medios‑Altos"},
-    "NOCHE": {"desde":67,"hasta":99,"etiqueta":"Altos"}
+RANGOS = {
+    "MAÑANA": {"desde": 0, "hasta": 33, "etiqueta": "Bajos (00‑33)"},
+    "TARDE": {"desde": 34, "hasta": 66, "etiqueta": "Medios‑Altos (34‑66)"},
+    "NOCHE": {"desde": 67, "hasta": 99, "etiqueta": "Altos (67‑99)"}
 }
 
-def mejores_candidatos(df, turno, min_r=3, max_r=18, cant=2):
-    info = RANGOS_TURNOS[turno]
-    fmax = df["fecha"].max()
-    largo = df.melt(id_vars=["fecha"], value_vars=["primero","segundo","tercero"], value_name="numero")
-    freq = largo["numero"].value_counts()
-    ult_fecha = largo.groupby("numero")["fecha"].max()
-    candidatos = []
-    for n in range(info["desde"], info["hasta"]+1):
-        retraso_d = (fmax - ult_fecha.get(n,fmax)).days
-        if min_r <= retraso_d <= max_r:
-            candidatos.append((-freq.get(n,0), retraso_d, n))
-    candidatos.sort()
-    return [n for _,_,n in candidatos[:cant]]
+def mejores_candidatos(df, franja, min_retraso=3, max_retraso=18, cantidad=2):
+    info = RANGOS[franja]
+    fecha_max = df["fecha"].max()
+    cols_numeros = [c for c in ["primero", "segundo", "tercero", "cuarto", "quinto"] if c in df.columns]
+    largo = df.melt(id_vars=["fecha"], value_vars=cols_numeros, var_name="pos", value_name="numero")
+    frecuencia = largo["numero"].value_counts()
+    ultima_fecha_por_num = largo.groupby("numero")["fecha"].max()
+    lista = []
+    for n in range(info["desde"], info["hasta"] + 1):
+        if n not in ultima_fecha_por_num.index:
+            continue
+        dias_retraso = (fecha_max - ultima_fecha_por_num.loc[n]).days
+        if min_retraso <= dias_retraso <= max_retraso:
+            lista.append((‑frecuencia.get(n, 0), dias_retraso, n))
+    lista.sort()
+    return [n for _, _, n in lista[:cantidad]]
 
-# 🖥️ INTERFAZ PRÁCTICA Y LIMPIA
+# 🖥️ INTERFAZ SEGURA
 st.set_page_config(page_title="LotoMetrika‑RD", layout="wide")
-st.title("📊 LotoMetrika‑RD — Sistema 1220 / Franjas Horarias")
-st.info(f"✅ Base lista — Registros válidos: {len(df)} | Última fecha: {df['fecha'].max().date()}")
+st.title("📊 LotoMetrika‑RD • Sistema 1220 + Franjas Horarias")
+st.info(f"✅ Datos listos | Registros válidos: {len(df)} | Último sorteo: {df['fecha'].max().date()}")
 
-# 🎛️ CONTROLES
-col1, col2, col3 = st.columns(3)
-with col1:
-    turno_sel = st.selectbox("Franja horaria", list(RANGOS_TURNOS.keys()), index=0)
-with col2:
-    min_r = st.number_input("Retraso mínimo (días)", min_value=1, max_value=60, value=3)
-with col3:
-    max_r = st.number_input("Retraso máximo (días)", min_value=min_r, max_value=120, value=18)
+c1, c2, c3 = st.columns(3)
+with c1: franja_sel = st.selectbox("Franja horaria", list(RANGOS.keys()), index=0)
+with c2: min_d = st.number_input("Retraso mínimo (días)", min_value=1, max_value=60, value=3)
+with c3: max_d = st.number_input("Retraso máximo (días)", min_value=min_d, max_value=120, value=18)
 
-# 📈 RESULTADOS
-candidatos = mejores_candidatos(df, turno_sel, min_r, max_r)
-st.subheader(f"🎯 Candidatos filtrados — {turno_sel} ({RANGOS_TURNOS[turno_sel]['etiqueta']})")
+st.subheader(f"🎯 Candidatos para {franja_sel} — {RANGOS[franja_sel]['etiqueta']}")
+for num in mejores_candidatos(df, franja_sel, min_d, max_d):
+    ok, texto = retraso_numero(num, df)
+    st.markdown(f"**{texto}** | Derivados 12/Q: `{' '.join(generar_derivados(num))}`")
 
-for num in candidatos:
-    ok, info = retraso_numero(num, df)
-    deriv = generar_derivados(num)
-    st.markdown(f"**{info}** | Derivados 12/Q: `{' '.join(deriv)}`")
-
-# 📄 VER TROZO DE DATOS SI QUIERES
 with st.expander("🔎 Ver muestra del historial"):
     st.dataframe(df.sort_values("fecha", ascending=False).head(20).reset_index(drop=True))
+
