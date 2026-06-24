@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime, date
-from pathlib import Path
+from pathlib import Path   # 
 
 # ---------------- CONFIGURACIÓN GENERAL ----------------
 st.set_page_config(page_title="LotoMetrika‑RD • Mapa Completo + Sistema 1220", layout="wide")
