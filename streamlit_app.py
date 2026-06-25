@@ -69,6 +69,15 @@ def cargar_tabla_1220():
     except Exception as e:
         st.warning(f"⚠️ Sin tabla de niveles: {e}")
         return pd.DataFrame()
+        @st.cache_data(show_spinner="Cargando base histórica principal…")
+def cargar():
+    try:
+        df = pd.read_csv(ARCHIVO_BASE, dtype=str)
+        df.columns = df.columns.str.strip().str.lower()
+        return df
+    except Exception as e:
+        st.error(f"❌ No se pudo leer la base principal: {e}")
+        return pd.DataFrame()
 # 🧩 LLAMARLAS AL INICIO DEL FLUJO
 df_base = cargar()
 df_rel = cargar_relaciones()
