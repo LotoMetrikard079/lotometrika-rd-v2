@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
-from pathlib import Path   #
+from pathlib import Path
+
 # 📍 RUTAS COMPLETAS
 CARPETA_DATOS = Path("data")
 ARCHIVO_BASE = CARPETA_DATOS / "raw_historical_baseline.csv"
@@ -9,8 +10,19 @@ ARCHIVO_DIA = CARPETA_DATOS / "un_dia_como_hoy.csv"
 ARCHIVO_REPDIR = CARPETA_DATOS / "repetidos_historicos_directos.csv"
 ARCHIVO_REPVOL = CARPETA_DATOS / "repetidos_historicos_volteados.csv"
 ARCHIVO_RET = CARPETA_DATOS / "retrasos_mandel.csv"
+ARCHIVO_NIV1220 = CARPETA_DATOS / "tabla_1220_niveles.csv"
 
 # 📥 FUNCIONES DE CARGA CON SEGURIDAD
+@st.cache_data(show_spinner="Cargando base histórica principal…")
+def cargar():
+    try:
+        df = pd.read_csv(ARCHIVO_BASE, dtype=str)
+        df.columns = df.columns.str.strip().str.lower()
+        return df
+    except Exception as e:
+        st.error(f"❌ No se pudo leer la base principal: {e}")
+        return pd.DataFrame()
+
 @st.cache_data(show_spinner="Cargando relaciones…")
 def cargar_relaciones():
     try:
@@ -60,24 +72,17 @@ def cargar_retrasos():
     except Exception as e:
         st.warning(f"⚠️ Sin retrasos: {e}")
         return pd.DataFrame()
+
 @st.cache_data(show_spinner="Cargando niveles Método 1220…")
 def cargar_tabla_1220():
     try:
-        df = pd.read_csv(CARPETA_DATOS / "tabla_1220_niveles.csv", dtype=str)
+        df = pd.read_csv(ARCHIVO_NIV1220, dtype=str)
         df.columns = df.columns.str.strip().str.lower()
         return df
     except Exception as e:
         st.warning(f"⚠️ Sin tabla de niveles: {e}")
         return pd.DataFrame()
-        @st.cache_data(show_spinner="Cargando base histórica principal…")
-def cargar():
-    try:
-        df = pd.read_csv(ARCHIVO_BASE, dtype=str)
-        df.columns = df.columns.str.strip().str.lower()
-        return df
-    except Exception as e:
-        st.error(f"❌ No se pudo leer la base principal: {e}")
-        return pd.DataFrame()
+
 # 🧩 LLAMARLAS AL INICIO DEL FLUJO
 df_base = cargar()
 df_rel = cargar_relaciones()
@@ -86,6 +91,7 @@ df_rep_dir = cargar_rep_dir()
 df_rep_vol = cargar_rep_vol()
 df_ret = cargar_retrasos()
 df_niv1220 = cargar_tabla_1220()
+
 # ⚙️ CONFIGURACIÓN Y PANTALLA PRINCIPAL
 st.set_page_config(page_title="LotoMetrika‑RD", layout="wide")
 st.title("📊 LotoMetrika‑RD • Sistema 1220 + Franjas Horarias")
