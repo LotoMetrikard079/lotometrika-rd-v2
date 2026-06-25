@@ -103,3 +103,33 @@ st.info(f"• Base principal: {len(df_base)} filas | Última fecha: {df_base['fe
 # Vista rápida para confirmar
 st.subheader("🔍 Muestra rápida de datos")
 st.dataframe(df_base.head(15), use_container_width=True)
+# 🎛️ FILTROS INTERACTIVOS
+st.subheader("🎚️ Explorar y filtrar")
+
+# Fechas mínima y máxima
+if "fecha" in df_base.columns and not df_base.empty:
+    df_base["fecha_dt"] = pd.to_datetime(df_base["fecha"], errors="coerce")
+    min_fecha = df_base["fecha_dt"].min()
+    max_fecha = df_base["fecha_dt"].max()
+    rango_fechas = st.date_input("Selecciona rango de fechas", [min_fecha, max_fecha])
+
+    # Turnos disponibles
+    turnos = sorted(df_base["turno"].dropna().unique())
+    sel_turnos = st.multiselect("Franjas horarias / Turnos", turnos, default=turnos)
+
+    # Loterías disponibles
+    loterias = sorted(df_base["loteria"].dropna().unique())
+    sel_loterias = st.multiselect("Loterías", loterias, default=loterias)
+
+    # Aplicar filtros
+    df_filtrado = df_base[
+        (df_base["fecha_dt"] >= pd.to_datetime(rango_fechas[0])) &
+        (df_base["fecha_dt"] <= pd.to_datetime(rango_fechas[1])) &
+        (df_base["turno"].isin(sel_turnos)) &
+        (df_base["loteria"].isin(sel_loterias))
+    ].copy()
+
+    st.info(f"🔎 Resultados filtrados: {len(df_filtrado)} registros")
+    st.dataframe(df_filtrado, use_container_width=True)
+else:
+    st.warning("⚠️ No hay datos suficientes para aplicar filtros")
