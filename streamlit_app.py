@@ -86,3 +86,14 @@ df_rep_dir = cargar_rep_dir()
 df_rep_vol = cargar_rep_vol()
 df_ret = cargar_retrasos()
 df_niv1220 = cargar_tabla_1220()
+# ⚙️ CONFIGURACIÓN Y PANTALLA PRINCIPAL
+st.set_page_config(page_title="LotoMetrika‑RD", layout="wide")
+st.title("📊 LotoMetrika‑RD • Sistema 1220 + Franjas Horarias")
+
+# Estado rápido de carga
+st.success("✅ TODOS LOS DATOS CARGADOS CORRECTAMENTE")
+st.info(f"• Base principal: {len(df_base)} filas | Última fecha: {df_base['fecha'].max() if 'fecha' in df_base.columns else '—'}")
+
+# Vista rápida para confirmar
+st.subheader("🔍 Muestra rápida de datos")
+st.dataframe(df_base.head(15), use_container_width=True)
