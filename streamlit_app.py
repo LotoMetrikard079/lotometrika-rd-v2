@@ -177,3 +177,89 @@ with st.expander("📅 Un día como hoy", expanded=False):
         st.dataframe(df_dia, use_container_width=True)
     else:
         st.info("Sin historial por fecha")
+# 🧠 GENERADOR DE CANDIDATOS — MÉTODO 1220 + FRANJAS HORARIAS
+st.header("🎯 Generador: Método 1220 + Franjas")
+
+if not df_base.empty and "fecha" in df_base.columns and "turno" in df_base.columns and "loteria" in df_base.columns:
+    # Asegurar formato fecha
+    df_base["fecha_dt"] = pd.to_datetime(df_base["fecha"], errors="coerce")
+    # Seleccionar lotería y turno objetivo
+    loterias_disponibles = sorted(df_base["loteria"].dropna().unique())
+    turnos_disponibles = sorted(df_base["turno"].dropna().unique())
+
+    col_sel1, col_sel2 = st.columns(2)
+    with col_sel1:
+        loteria_objetivo = st.selectbox("Lotería objetivo", loterias_disponibles)
+    with col_sel2:
+        turno_objetivo = st.selectbox("Franja / Turno objetivo", turnos_disponibles)
+
+    # Tomar el último registro anterior de esa lotería para calcular
+    df_fil_lot = df_base[df_base["loteria"] == loteria_objetivo].copy()
+    if not df_fil_lot.empty:
+        ultimo_reg = df_fil_lot.sort_values("fecha_dt", ascending=False).iloc[0]
+        num_ant = [ultimo_reg["primero"], ultimo_reg["segundo"], ultimo_reg["tercero"]]
+        # Convertir a enteros con ceros a la izquierda
+        try:
+            nums = [int(str(n).zfill(2)) for n in num_ant]
+        except:
+            nums = []
+            st.warning("⚠️ No se pudieron leer bien los números del último sorteo")
+
+        st.info(f"📌 Base de cálculo: {loteria_objetivo} | Último sorteo: {ultimo_reg['fecha']} {ultimo_reg['turno']} → {num_ant}")
+
+        # Cargar regla base Método 1220 (suma/resta fija + reglas de franja)
+        if nums and not df_niv1220.empty:
+            # Regla básica del método: aplicar 12 y 20 como desplazamientos
+            desplazamientos = [12, 20]
+            candidatos = []
+            for n in nums:
+                for d in desplazamientos:
+                    suma = (n + d) % 100
+                    resta = (n - d) % 100
+                    candidatos.extend([suma, resta])
+
+            # Agregar factor de franja horaria: rangos que observaste
+            if turno_objetivo.upper() == "MEDIODIA":
+                rango_min, rango_max = 0, 33
+            elif turno_objetivo.upper() == "TARDE":
+                rango_min, rango_max = 34, 66
+            elif turno_objetivo.upper() == "NOCHE":
+                rango_min, rango_max = 67, 99
+            else:
+                rango_min, rango_max = 0, 99
+
+            # Calcular puntuación: pertenencia al rango + frecuencias/retrasos si existen
+            df_cand = pd.DataFrame({"numero": sorted(set(candidatos))})
+            df_cand["en_rango_franja"] = df_cand["numero"].apply(lambda x: 1 if rango_min <= x <= rango_max else 0)
+
+            # Mejorar puntuación con datos de repetidos/retrasos si están disponibles
+            def obtener_peso(n):
+                peso = 0
+                n_str = f"{n:02d}"
+                if not df_rep_dir.empty and "numero" in df_rep_dir.columns:
+                    fila = df_rep_dir[df_rep_dir["numero"] == n_str]
+                    if not fila.empty:
+                        peso += float(fila.iloc[0].get("frecuencia", 0)) / 10
+                if not df_ret.empty and "numero" in df_ret.columns:
+                    fila_r = df_ret[df_ret["numero"] == n_str]
+                    if not fila_r.empty:
+                        peso += 1 / (1 + float(fila_r.iloc[0].get("retraso", 100)))
+                return round(peso, 2)
+
+            df_cand["peso_adicional"] = df_cand["numero"].apply(obtener_peso)
+            df_cand["confianza_total"] = round(df_cand["en_rango_franja"] * 10 + df_cand["peso_adicional"], 2)
+
+            # Ordenar por confianza descendente
+            df_cand = df_cand.sort_values("confianza_total", ascending=False).reset_index(drop=True)
+            df_cand["numero"] = df_cand["numero"].apply(lambda x: f"{x:02d}")
+
+            st.subheader("✅ Candidatos ordenados por confianza")
+            st.dataframe(df_cand, use_container_width=True)
+            st.caption(f"💡 Regla aplicada: rango {rango_min:02d}‑{rango_max:02d} para franja {turno_objetivo} + Método 1220")
+
+        else:
+            st.info("ℹ️ Faltan datos de números o tabla 1220 para generar cálculos")
+    else:
+        st.warning("⚠️ No hay registros para la lotería seleccionada")
+else:
+    st.warning("⚠️ Base principal incompleta para generar candidatos")
