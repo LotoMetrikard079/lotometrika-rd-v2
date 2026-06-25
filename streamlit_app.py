@@ -1,3 +1,6 @@
+import streamlit as st
+import pandas as pd
+from pathlib import Path   #
 # 📍 RUTAS COMPLETAS
 CARPETA_DATOS = Path("data")
 ARCHIVO_BASE = CARPETA_DATOS / "raw_historical_baseline.csv"
