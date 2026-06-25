@@ -133,3 +133,47 @@ if "fecha" in df_base.columns and not df_base.empty:
     st.dataframe(df_filtrado, use_container_width=True)
 else:
     st.warning("⚠️ No hay datos suficientes para aplicar filtros")
+# 📊 TABLAS DE APOYO DEL SISTEMA
+st.header("📂 Módulos de referencia")
+
+# 1. Tabla de niveles Método 1220
+with st.expander("📘 Tabla 1220 — Niveles y pesos", expanded=False):
+    if not df_niv1220.empty:
+        st.dataframe(df_niv1220, use_container_width=True)
+    else:
+        st.info("ℹ️ Tabla 1220 vacía o no cargada")
+
+# 2. Repeticiones y retrasos
+with st.expander("🔁 Repeticiones y Retrasos", expanded=False):
+    col1, col2 = st.columns(2)
+    with col1:
+        st.subheader("Directas")
+        if not df_rep_dir.empty:
+            st.dataframe(df_rep_dir.head(20), use_container_width=True)
+        else:
+            st.info("Sin repeticiones directas")
+    with col2:
+        st.subheader("Volteadas")
+        if not df_rep_vol.empty:
+            st.dataframe(df_rep_vol.head(20), use_container_width=True)
+        else:
+            st.info("Sin repeticiones volteadas")
+    st.subheader("⏱️ Ciclos / Retrasos")
+    if not df_ret.empty:
+        st.dataframe(df_ret.head(20), use_container_width=True)
+    else:
+        st.info("Sin datos de retrasos")
+
+# 3. Relaciones y sucesiones
+with st.expander("🔗 Relaciones y sucesiones", expanded=False):
+    if not df_rel.empty:
+        st.dataframe(df_rel.head(30), use_container_width=True)
+    else:
+        st.info("Sin tabla de relaciones")
+
+# 4. Un día como hoy
+with st.expander("📅 Un día como hoy", expanded=False):
+    if not df_dia.empty:
+        st.dataframe(df_dia, use_container_width=True)
+    else:
+        st.info("Sin historial por fecha")
