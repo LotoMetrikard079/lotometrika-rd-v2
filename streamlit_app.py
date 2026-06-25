@@ -57,7 +57,15 @@ def cargar_retrasos():
     except Exception as e:
         st.warning(f"⚠️ Sin retrasos: {e}")
         return pd.DataFrame()
-
+@st.cache_data(show_spinner="Cargando niveles Método 1220…")
+def cargar_tabla_1220():
+    try:
+        df = pd.read_csv(CARPETA_DATOS / "tabla_1220_niveles.csv", dtype=str)
+        df.columns = df.columns.str.strip().str.lower()
+        return df
+    except Exception as e:
+        st.warning(f"⚠️ Sin tabla de niveles: {e}")
+        return pd.DataFrame()
 # 🧩 LLAMARLAS AL INICIO DEL FLUJO
 df_base = cargar()
 df_rel = cargar_relaciones()
