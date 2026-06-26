@@ -7,6 +7,21 @@ from pathlib import Path
 CARPETA_DATOS = Path("data")
 ARCHIVO_NIV1220 = CARPETA_DATOS / "tabla_1220_referencia.csv" # ✅ RUTA LIMPIA, SIN /data DOBLE
 
+# 📥 CARGA DE LA TABLA 1220
+@st.cache_data(show_spinner="Cargando tabla Método 1220…")
+def cargar_tabla_1220():
+    try:
+        df = pd.read_csv(ARCHIVO_NIV1220, dtype=str)
+        df.columns = df.columns.str.strip().str.lower()
+        return df
+    except Exception as e:
+        st.error(f"❌ No se pudo leer tabla 1220: {e}")
+        return pd.DataFrame()
+
+# ✅ EJECUTAR LA CARGA AL INICIO
+df_niv1220 = cargar_tabla_1220()
+
+
 # ✅ LÓGICA COMPLETA + RUTA AJUSTADA CORRECTAMENTE
 if nums and not df_niv1220.empty:
     cod12 = int(df_niv1220.loc[df_niv1220["codigo"] == "12", "valor"].iloc[0])
