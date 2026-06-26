@@ -1,0 +1,4 @@
+codigo,operacion,valor,descripcion
+12,SUMAR,12,"aplicar a cada posición del sorteo previo"
+20,SUMAR,20,"segundo paso del código base"
+Q,CICLO,7,"desplazamiento semanal del código Q"
