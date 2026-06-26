@@ -1,4 +1,6 @@
-
+import streamlit as st
+import pandas as pd
+from pathlib import Path
         ARCHIVO_NIV1220 = CARPETA_DATOS / "data" / "tabla_1220_referencia.csv"
 # ✅ LÓGICA COMPLETA + RUTA AJUSTADA CORRECTAMENTE
         if nums and not df_niv1220.empty:
