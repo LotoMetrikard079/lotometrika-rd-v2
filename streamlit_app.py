@@ -3,11 +3,11 @@ import streamlit as st
 import pandas as pd
 from pathlib import Path
 
-# 📍 RUTA ABSOLUTA SEGURA — NO FALLA DONDE SE EJECUTE
+# 📍 RUTA ABSOLUTA SEGURA — NO FALLA
 CARPETA_DATOS = Path(__file__).resolve().parent / "data"
-ARCHIVO_NIV1220 = CARPETA_DATOS / "tabla_1220_niveles.csv" # ✅ NOMBRE ACTUALIZADO
+ARCHIVO_NIV1220 = CARPETA_DATOS / "tabla_1220_niveles.csv"
 
-# 📥 CARGA DE LA TABLA 1220
+# 📥 CARGA TABLA 1220
 @st.cache_data(show_spinner="Cargando tabla Método 1220…")
 def cargar_tabla_1220():
     try:
@@ -18,17 +18,21 @@ def cargar_tabla_1220():
         st.error(f"❌ No se pudo leer tabla 1220: {e}")
         return pd.DataFrame()
 
-# ✅ EJECUTAR CARGA AL INICIO
 df_niv1220 = cargar_tabla_1220()
 
 # ==================================================
-# ⚠️ AQUÍ DEBES TENER EL RESTO DE TU CÓDIGO:
-# Cargas de df_base, df_rep_dir, df_ret, controles, filtros,
-# selección de lotería, lectura de números anteriores → AQUÍ SE CREAN:
-# nums = [...] y turno_objetivo = "MEDIODIA"/"TARDE"/"NOCHE"
+# 📌 AQUÍ DEBES TENER TODAS LAS DEMÁS CARGAS Y CONTROLES:
+# Cargar df_base, df_rep_dir, df_ret, df_rel, df_dia…
+# Filtros, selección de lotería, lectura de resultados anteriores
+# → AQUÍ SE CREAN OBLIGATORIAMENTE:
+# nums = [números extraídos de sorteo anterior convertidos a entero]
+# turno_objetivo = valor del turno seleccionado
 # ==================================================
+# Ejemplo de cómo se vería al final de esa sección:
+# nums = [int(x) for x in lista_numeros_anteriores]
+# turno_objetivo = st.selectbox("Franja horaria", ["MEDIODIA","TARDE","NOCHE","MAÑANA"])
 
-# 🧠 LÓGICA DE CÁLCULO — SOLO AQUÍ, DESPUÉS DE QUE EXISTAN LAS VARIABLES
+# 🧠 LÓGICA DE CÁLCULO — SOLO AQUÍ, CUANDO YA EXISTEN LAS VARIABLES
 if nums and not df_niv1220.empty:
     cod12 = int(df_niv1220.loc[df_niv1220["codigo"] == "12", "valor"].iloc[0])
     cod20 = int(df_niv1220.loc[df_niv1220["codigo"] == "20", "valor"].iloc[0])
@@ -41,7 +45,7 @@ if nums and not df_niv1220.empty:
             resta = (n - d) % 100
             candidatos.extend([suma, resta])
 
-    # 🎯 RANGO POR FRANJA HORARIA — TU REGLA
+    # 🎯 RANGO POR FRANJA HORARIA
     tu = turno_objetivo.upper()
     if tu == "MEDIODIA":
         rango_min, rango_max = 0, 33
@@ -54,7 +58,7 @@ if nums and not df_niv1220.empty:
     else:
         rango_min, rango_max = 0, 99
 
-    # 📊 CALCULAR PESOS Y CONFIANZA — TAL COMO LO DISEÑAMOS
+    # 📊 PESOS Y CONFIANZA
     df_cand = pd.DataFrame({"numero": sorted(set(candidatos))})
     df_cand["en_rango_franja"] = df_cand["numero"].apply(lambda x: 1 if rango_min <= x <= rango_max else 0)
 
@@ -81,5 +85,4 @@ if nums and not df_niv1220.empty:
     st.caption(f"💡 Regla aplicada: rango {rango_min:02d}‑{rango_max:02d} para franja {turno_objetivo} + Método 1220")
 else:
     st.info("ℹ️ Faltan datos de números o tabla 1220 para generar cálculos")
-
 
