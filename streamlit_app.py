@@ -263,3 +263,16 @@ if not df_base.empty and "fecha" in df_base.columns and "turno" in df_base.colum
         st.warning("⚠️ No hay registros para la lotería seleccionada")
 else:
     st.warning("⚠️ Base principal incompleta para generar candidatos")
+# 📍 RUTA NUEVA PARA TABLA 1220
+ARCHIVO_TABLA1220 = CARPETA_DATOS / "tabla_1220_referencia.csv"
+
+@st.cache_data(show_spinner="Cargando reglas Método 1220…")
+def cargar_tabla_1220():
+    try:
+        df = pd.read_csv(ARCHIVO_TABLA1220, dtype=str)
+        df.columns = df.columns.str.strip().str.lower()
+        return df
+    except Exception as e:
+        st.warning(f"⚠️ Tabla 1220 no disponible: {e}")
+        return pd.DataFrame()
+        df_niv1220 = cargar_tabla_1220()
