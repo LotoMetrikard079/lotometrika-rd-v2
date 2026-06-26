@@ -3,36 +3,115 @@ import streamlit as st
 import pandas as pd
 from pathlib import Path
 
-# 📍 RUTA ABSOLUTA SEGURA — NO FALLA
+# 📍 RUTAS ABSOLUTAS SEGURAS — NO FALLAN
 CARPETA_DATOS = Path(__file__).resolve().parent / "data"
+
+ARCHIVO_BASE = CARPETA_DATOS / "raw_historical_baseline.csv"
+ARCHIVO_REL = CARPETA_DATOS / "relaciones_sucesion_acompañantes.csv"
+ARCHIVO_DIA = CARPETA_DATOS / "un_dia_como_hoy.csv"
+ARCHIVO_REPDIR = CARPETA_DATOS / "repetidos_historicos_directos.csv"
+ARCHIVO_REPVOL = CARPETA_DATOS / "repetidos_historicos_volteados.csv"
+ARCHIVO_RET = CARPETA_DATOS / "retrasos_mandel.csv"
 ARCHIVO_NIV1220 = CARPETA_DATOS / "tabla_1220_niveles.csv"
 
-# 📥 CARGA TABLA 1220
-@st.cache_data(show_spinner="Cargando tabla Método 1220…")
+
+# 📥 FUNCIONES DE CARGA GENERALES
+@st.cache_data(show_spinner="Cargando base principal…")
+def cargar_base():
+    try:
+        df = pd.read_csv(ARCHIVO_BASE, dtype=str)
+        df.columns = df.columns.str.strip().str.lower()
+        if "fecha" in df.columns:
+            df["fecha_dt"] = pd.to_datetime(df["fecha"], errors="coerce")
+        return df
+    except Exception as e:
+        st.error(f"❌ Base principal: {e}")
+        return pd.DataFrame()
+
+@st.cache_data(show_spinner="Cargando tabla 1220…")
 def cargar_tabla_1220():
     try:
         df = pd.read_csv(ARCHIVO_NIV1220, dtype=str)
         df.columns = df.columns.str.strip().str.lower()
         return df
     except Exception as e:
-        st.error(f"❌ No se pudo leer tabla 1220: {e}")
+        st.error(f"❌ Tabla 1220: {e}")
         return pd.DataFrame()
 
+@st.cache_data(show_spinner="Cargando repeticiones directas…")
+def cargar_rep_dir():
+    try:
+        df = pd.read_csv(ARCHIVO_REPDIR, dtype=str)
+        df.columns = df.columns.str.strip().str.lower()
+        return df
+    except: return pd.DataFrame()
+
+@st.cache_data(show_spinner="Cargando retrasos…")
+def cargar_retrasos():
+    try:
+        df = pd.read_csv(ARCHIVO_RET, dtype=str)
+        df.columns = df.columns.str.strip().str.lower()
+        return df
+    except: return pd.DataFrame()
+
+# (puedes agregar igual el resto: relaciones, día como hoy, volteados… si los usas)
+
+
+# ⚙️ EJECUTAR CARGAS AL INICIO
+df_base = cargar_base()
 df_niv1220 = cargar_tabla_1220()
+df_rep_dir = cargar_rep_dir()
+df_ret = cargar_retrasos()
+
 
 # ==================================================
-# 📌 AQUÍ DEBES TENER TODAS LAS DEMÁS CARGAS Y CONTROLES:
-# Cargar df_base, df_rep_dir, df_ret, df_rel, df_dia…
-# Filtros, selección de lotería, lectura de resultados anteriores
-# → AQUÍ SE CREAN OBLIGATORIAMENTE:
-# nums = [números extraídos de sorteo anterior convertidos a entero]
-# turno_objetivo = valor del turno seleccionado
+# 🎛️ INTERFAZ, FILTROS Y SELECCIÓN — AQUÍ SE CREAN nums y turno_objetivo
 # ==================================================
-# Ejemplo de cómo se vería al final de esa sección:
-# nums = [int(x) for x in lista_numeros_anteriores]
-# turno_objetivo = st.selectbox("Franja horaria", ["MEDIODIA","TARDE","NOCHE","MAÑANA"])
+st.set_page_config(page_title="LotoMetrika‑RD", layout="wide")
+st.title("📊 LotoMetrika‑RD • Sistema 1220 + Franjas Horarias")
 
-# 🧠 LÓGICA DE CÁLCULO — SOLO AQUÍ, CUANDO YA EXISTEN LAS VARIABLES
+if df_base.empty:
+    st.error("⚠️ No se pudo cargar la base de datos principal. Revisa el archivo CSV.")
+    st.stop()
+
+# Rango de fechas
+min_fecha = df_base["fecha_dt"].min()
+max_fecha = df_base["fecha_dt"].max()
+rango_fechas = st.date_input("Selecciona rango de fechas", [min_fecha, max_fecha])
+
+# Lotería y turno
+loterias_disponibles = sorted(df_base["loteria"].dropna().unique())
+sel_loteria = st.selectbox("Lotería objetivo", loterias_disponibles)
+
+turnos_disponibles = sorted(df_base["turno"].dropna().unique())
+turno_objetivo = st.selectbox("Franja horaria / Turno", turnos_disponibles)
+
+# Filtrar datos según selección
+filtro = (
+    (df_base["fecha_dt"] >= pd.to_datetime(rango_fechas[0])) &
+    (df_base["fecha_dt"] <= pd.to_datetime(rango_fechas[1])) &
+    (df_base["loteria"] == sel_loteria) &
+    (df_base["turno"] == turno_objetivo)
+)
+df_filtrado = df_base.loc[filtro].copy()
+
+st.info(f"✅ Registros válidos: {len(df_filtrado)} | Último: {df_base['fecha_dt'].max().date()}")
+
+# 📌 OBTENER NÚMEROS DEL ÚLTIMO SORTEO DISPONIBLE → AQUÍ SE DEFINE nums
+nums = []
+if not df_filtrado.empty:
+    ultima_fila = df_filtrado.sort_values("fecha_dt").iloc[-1]
+    nums = [
+        int(ultima_fila["primero"]),
+        int(ultima_fila["segundo"]),
+        int(ultima_fila["tercero"])
+    ]
+    st.write("🔢 Números del sorteo anterior:", nums)
+
+
+# ==================================================
+# 🧠 LÓGICA DE CÁLCULO — YA TIENE nums y turno_objetivo ✅
+# ==================================================
 if nums and not df_niv1220.empty:
     cod12 = int(df_niv1220.loc[df_niv1220["codigo"] == "12", "valor"].iloc[0])
     cod20 = int(df_niv1220.loc[df_niv1220["codigo"] == "20", "valor"].iloc[0])
@@ -58,7 +137,7 @@ if nums and not df_niv1220.empty:
     else:
         rango_min, rango_max = 0, 99
 
-    # 📊 PESOS Y CONFIANZA
+    # 📊 CALCULAR PESOS Y CONFIANZA
     df_cand = pd.DataFrame({"numero": sorted(set(candidatos))})
     df_cand["en_rango_franja"] = df_cand["numero"].apply(lambda x: 1 if rango_min <= x <= rango_max else 0)
 
