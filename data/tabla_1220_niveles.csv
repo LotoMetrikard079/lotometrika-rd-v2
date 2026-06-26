@@ -1,1 +1,4 @@
-nivel,rango_peso,descripcion
+codigo,operacion,valor,descripcion
+12,SUMAR,12,"desplazamiento base primer paso"
+20,SUMAR,20,"desplazamiento base segundo paso"
+Q,CICLO,7,"rotación semanal del código Q"
