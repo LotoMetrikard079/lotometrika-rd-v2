@@ -207,6 +207,26 @@ if not df_base.empty and "fecha" in df_base.columns and "turno" in df_base.colum
 
         st.info(f"📌 Base de cálculo: {loteria_objetivo} | Último sorteo: {ultimo_reg['fecha']} {ultimo_reg['turno']} → {num_ant}")
 
+# 🧠 PEGAR AQUÍ LA LÓGICA DE CÁLCULO COMPLETA
+if not df_niv1220.empty and not df_base.empty and nums:
+    cod12 = int(df_niv1220.loc[df_niv1220["codigo"]=="12","valor"].iloc[0])
+    cod20 = int(df_niv1220.loc[df_niv1220["codigo"]=="20","valor"].iloc[0])
+    candidatos = []
+    for pos, num in enumerate(nums, start=1):
+        n = int(num)
+        candidatos.append({
+            "Posición": pos,
+            "Base": n,
+            f"+{cod12}": (n + cod12) % 100,
+            f"+{cod20}": (n + cod20) % 100,
+            f"+{cod12}+{cod20}": (n + cod12 + cod20) % 100
+        })
+    st.subheader("🎯 Candidatos Método 1220")
+    st.dataframe(pd.DataFrame(candidatos), use_container_width=True)
+else:
+    st.info("ℹ️ Sin datos completos para calcular")
+
+
         # Cargar regla base Método 1220 (suma/resta fija + reglas de franja)
         if nums and not df_niv1220.empty:
             # Regla básica del método: aplicar 12 y 20 como desplazamientos
