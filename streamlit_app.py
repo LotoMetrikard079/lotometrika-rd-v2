@@ -1,4 +1,6 @@
-        # ✅ LÓGICA COMPLETA + RUTA AJUSTADA CORRECTAMENTE
+
+ARCHIVO_NIV1220 = CARPETA_DATOS / "data" / "tabla_1220_referencia.csv"
+# ✅ LÓGICA COMPLETA + RUTA AJUSTADA CORRECTAMENTE
         if nums and not df_niv1220.empty:
             cod12 = int(df_niv1220.loc[df_niv1220["codigo"] == "12", "valor"].iloc[0])
             cod20 = int(df_niv1220.loc[df_niv1220["codigo"] == "20", "valor"].iloc[0])
