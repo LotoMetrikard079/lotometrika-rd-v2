@@ -3,9 +3,9 @@ import streamlit as st
 import pandas as pd
 from pathlib import Path
 
-# 📍 DEFINE PRIMERO LA CARPETA — SIN ESPACIOS AL INICIO
-CARPETA_DATOS = Path("data")
-ARCHIVO_NIV1220 = CARPETA_DATOS / "tabla_1220_referencia.csv" # ✅ RUTA LIMPIA, SIN /data DOBLE
+# 📍 RUTA ABSOLUTA SEGURA — NO FALLA DONDE SE EJECUTE
+CARPETA_DATOS = Path(__file__).resolve().parent / "data"
+ARCHIVO_NIV1220 = CARPETA_DATOS / "tabla_1220_niveles.csv" # ✅ NOMBRE ACTUALIZADO
 
 # 📥 CARGA DE LA TABLA 1220
 @st.cache_data(show_spinner="Cargando tabla Método 1220…")
@@ -18,11 +18,17 @@ def cargar_tabla_1220():
         st.error(f"❌ No se pudo leer tabla 1220: {e}")
         return pd.DataFrame()
 
-# ✅ EJECUTAR LA CARGA AL INICIO
+# ✅ EJECUTAR CARGA AL INICIO
 df_niv1220 = cargar_tabla_1220()
 
+# ==================================================
+# ⚠️ AQUÍ DEBES TENER EL RESTO DE TU CÓDIGO:
+# Cargas de df_base, df_rep_dir, df_ret, controles, filtros,
+# selección de lotería, lectura de números anteriores → AQUÍ SE CREAN:
+# nums = [...] y turno_objetivo = "MEDIODIA"/"TARDE"/"NOCHE"
+# ==================================================
 
-# ✅ LÓGICA COMPLETA + RUTA AJUSTADA CORRECTAMENTE
+# 🧠 LÓGICA DE CÁLCULO — SOLO AQUÍ, DESPUÉS DE QUE EXISTAN LAS VARIABLES
 if nums and not df_niv1220.empty:
     cod12 = int(df_niv1220.loc[df_niv1220["codigo"] == "12", "valor"].iloc[0])
     cod20 = int(df_niv1220.loc[df_niv1220["codigo"] == "20", "valor"].iloc[0])
@@ -75,4 +81,5 @@ if nums and not df_niv1220.empty:
     st.caption(f"💡 Regla aplicada: rango {rango_min:02d}‑{rango_max:02d} para franja {turno_objetivo} + Método 1220")
 else:
     st.info("ℹ️ Faltan datos de números o tabla 1220 para generar cálculos")
+
 
