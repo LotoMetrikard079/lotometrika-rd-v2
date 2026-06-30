@@ -1,1 +1,99 @@
-fecha_referencia,dia_semana,ano_hist,loteria,num1,num2,num3,tipo_registro,repeticion
+numero,frecuencia,ultima_aparicion,loteria
+45,12,2025-06-30,New York 2:30
+30,11,2025-06-30,Quiniela Loteka
+88,11,2024-06-30,Quiniela Leidsa
+13,11,2024-06-30,Anguila 03:00 PM
+36,10,2025-06-30,La Primera Tarde
+47,10,2025-06-30,Anguila 09:00 AM
+03,9,2025-06-30,Loteria Nacional
+89,9,2025-06-30,Florida Dia
+21,9,2025-06-30,Florida Noche
+04,9,2025-06-30,King Lottery AM
+59,9,2025-06-30,King Lottery PM
+72,9,2025-06-30,Anguila 9:00 PM
+31,9,2025-06-30,Anguila 03:00 PM
+24,9,2024-06-30,Quiniela Loteka
+74,8,2025-06-30,Quiniela Real
+84,8,2025-06-30,Quiniela LoteDom
+56,8,2025-06-30,Quiniela LoteDom
+15,8,2025-06-30,La Primera Noche
+96,8,2025-06-30,Anguila 1:00 PM
+28,8,2025-06-30,Anguila 9:00 PM
+46,8,2025-06-30,Anguila 09:00 AM
+55,8,2025-06-30,Anguila 07:00 PM
+54,8,2024-06-30,Gana Mas
+75,7,2025-06-30,Quiniela Leidsa
+20,7,2025-06-30,Quiniela Loteka
+97,7,2025-06-30,Quiniela Real
+17,7,2025-06-30,New York 10:30
+82,7,2025-06-30,La Primera Tarde
+02,7,2025-06-30,La Suerte MD
+14,7,2025-06-30,Pega 3 Mas
+08,7,2025-06-30,Pega 3 Mas
+83,7,2025-06-30,La Suerte 6PM
+76,7,2025-06-30,Anguila 10:00 AM
+16,7,2024-06-30,La Primera Tarde
+27,7,2024-06-30,Anguila 02:00 PM
+91,7,2023-06-30,Anguila 6:00 PM
+77,7,2021-06-30,Quiniela Real
+73,6,2025-06-30,Loteria Nacional
+32,6,2025-06-30,Gana Mas
+80,6,2025-06-30,Quiniela LoteDom
+49,6,2025-06-30,La Suerte MD
+65,6,2025-06-30,Florida Dia
+78,6,2025-06-30,Anguila 6:00 PM
+26,6,2025-06-30,Anguila 12:00 PM
+68,6,2024-06-30,Loteria Nacional
+44,6,2024-06-30,Florida Noche
+25,6,2024-06-30,Anguila 04:00 PM
+00,6,2023-06-30,Anguila 9:00 PM
+11,5,2025-06-30,Quiniela Leidsa
+01,5,2025-06-30,Quiniela Leidsa
+61,5,2025-06-30,Gana Mas
+92,5,2025-06-30,La Primera Noche
+29,5,2025-06-30,Pega 3 Mas
+69,5,2025-06-30,Anguila 1:00 PM
+10,5,2025-06-30,Anguila 9:00 PM
+51,5,2025-06-30,Anguila 11:00 AM
+05,5,2025-06-30,Anguila 12:00 PM
+41,5,2025-06-30,Anguila 02:00 PM
+81,5,2025-06-30,Anguila 04:00 PM
+87,5,2025-06-30,Anguila 05:00 PM
+33,5,2025-06-30,Anguila 07:00 PM
+66,5,2024-06-30,Loteria Nacional
+07,5,2024-06-30,La Primera Noche
+71,5,2024-06-30,Anguila 09:00 AM
+18,5,2023-06-30,Anguila 1:00 PM
+48,4,2025-06-30,New York 2:30
+58,4,2025-06-30,Anguila 6:00 PM
+98,4,2025-06-30,Anguila 09:00 AM
+40,4,2025-06-30,Anguila 02:00 PM
+90,4,2025-06-30,Anguila 04:00 PM
+86,4,2025-06-30,Anguila 05:00 PM
+39,4,2025-06-30,Anguila 08:00 PM
+79,4,2024-06-30,La Suerte 6PM
+19,4,2024-06-30,King Lottery PM
+53,4,2024-06-30,Anguila 10:00 AM
+09,4,2024-06-30,Anguila 12:00 PM
+67,4,2024-06-30,Anguila 07:00 PM
+63,4,2023-06-30,Quiniela Leidsa
+22,4,2023-06-30,Florida Dia
+52,4,2022-06-30,La Suerte MD
+06,4,2022-06-30,Florida Noche
+57,4,2022-06-30,Anguila 10:00 AM
+34,3,2025-06-30,Loteria Nacional
+70,3,2025-06-30,Quiniela Real
+23,3,2025-06-30,New York 2:30
+50,3,2025-06-30,La Suerte 6PM
+95,3,2025-06-30,La Suerte 6PM
+60,3,2025-06-30,Anguila 12:00 PM
+99,3,2024-06-30,Gana Mas
+37,3,2024-06-30,Pega 3 Mas
+85,3,2024-06-30,King Lottery AM
+94,2,2023-06-30,Gana Mas
+35,2,2023-06-30,Quiniela Real
+64,2,2023-06-30,Anguila 6:00 PM
+62,2,2022-06-30,Loteria Nacional
+38,2,2022-06-30,Gana Mas
+43,2,2021-06-30,New York 10:30
+42,2,2021-06-30,Anguila 9:00 PM
