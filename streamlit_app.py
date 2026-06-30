@@ -29,8 +29,8 @@ df_ret = cargar(ARCHIVO_RET)
 df_residuos = cargar(ARCHIVO_RESIDUOS)  # ✅ CARGA RESIDUOS
 
 # 🎨 INTERFAZ
-st.set_page_config(page_title="LotoMetrika‑RD‑v2", layout="wide")
-st.title("🧪 LotoMetrika‑RD‑v2")
+st.set_page_config(page_title="LotoMetrika‑RD‑v2.1", layout="wide")
+st.title("🧪 LotoMetrika‑RD‑v2.1")
 
 if df_base.empty:
     st.error("⚠️ Base de datos vacía. Revisa el archivo CSV.")
@@ -57,6 +57,22 @@ filtro = (
 df_filtrado = df_base.loc[filtro].copy()
 
 st.info(f"✅ Registros: {len(df_filtrado)} | Último: {df_base['fecha_dt'].max().date()}")
+
+# 📊 MOSTRAR INDICADOR IDI Y TENDENCIA
+if not df_residuos.empty:
+    df_residuos["fecha_dt"] = pd.to_datetime(df_residuos["fecha"])
+    ultimo_res = df_residuos.sort_values("fecha_dt").iloc[-1]
+    st.metric(
+        label=f"IDI {ultimo_res['fecha']}",
+        value=f"{ultimo_res['idi_certificado']}",
+        delta=f"{ultimo_res['regimen']} | N={ultimo_res['n_sorteos']}"
+    )
+    if ultimo_res["regimen"] == "CONTRACCION":
+        st.success("📈 Tendencia hoy: **AL ALZA** → priorizar números ≥ 45")
+    elif ultimo_res["regimen"] == "EXPANSION":
+        st.warning("📉 Tendencia hoy: **A LA BAJA** → priorizar números ≤ 55")
+    else:
+        st.info("⚖️ Tendencia hoy: **EQUILIBRIO** → sin preferencia")
 
 # Últimos números
 nums = []
@@ -103,25 +119,29 @@ if nums and not df_niv1220.empty:
         if not df_ret.empty and "numero" in df_ret.columns:
             fila = df_ret[df_ret["numero"] == n_str]
             if not fila.empty:
-                p += 1 / (1 + float(fila_r.iloc[0].get("retraso", 100)))
+                retraso = float(fila.iloc[0].get("retraso", 100))
+                p += 1 / (1 + retraso)
         return round(p, 2)
 
     df_cand["peso_base"] = df_cand["numero"].apply(peso_base)
 
     # ✅ AJUSTE POR RESIDUO INTERNO
-    ajuste_residuo = 0
     if not df_residuos.empty:
         fecha_ultima = ultima["fecha"]
         fila_res = df_residuos[df_residuos["fecha"] == fecha_ultima]
         if not fila_res.empty:
-            residuo = float(fila_res.iloc[0]["residuo_promedio"])
-            if residuo < 45:
-                ajuste_residuo = 0.15  # +15% a números altos
-                df_cand.loc[df_cand["numero"] >= 45, "peso_base"] *= (1 + ajuste_residuo)
+            residuo = float(fila_res.iloc[0]["idi_certificado"])
+            if residuo < 35:
+                df_cand["ajuste"] = df_cand["numero"].apply(lambda x: 1.15 if x >= 45 else 1.0)
             elif residuo > 55:
-                ajuste_residuo = 0.15  # +15% a números bajos
-                df_cand.loc[df_cand["numero"] <= 55, "peso_base"] *= (1 + ajuste_residuo)
-            # Entre 45-55 queda neutro
+                df_cand["ajuste"] = df_cand["numero"].apply(lambda x: 1.15 if x <= 55 else 1.0)
+            else:
+                df_cand["ajuste"] = 1.0
+            df_cand["peso_base"] = round(df_cand["peso_base"] * df_cand["ajuste"], 2)
+        else:
+            df_cand["ajuste"] = 1.0
+    else:
+        df_cand["ajuste"] = 1.0
 
     # Confianza final
     df_cand["confianza_total"] = round(df_cand["en_rango"] * 10 + df_cand["peso_base"], 2)
@@ -129,6 +149,6 @@ if nums and not df_niv1220.empty:
     df_cand = df_cand.sort_values("confianza_total", ascending=False).reset_index(drop=True)
 
     st.subheader("✅ Candidatos con ajuste por Residuo Interno")
-    st.dataframe(df_cand, use_container_width=True)
+    st.dataframe(df_cand[["numero", "en_rango", "peso_base", "ajuste", "confianza_total"]], use_container_width=True)
 else:
     st.info("ℹ️ Faltan datos de Método 1220 o números para generar candidatos")
